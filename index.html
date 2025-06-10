@@ -342,7 +342,7 @@
 <body>
     <div class="container">
         <div class="dashboard-header tech-text">
-            <h1>Aaron出勤儀表板</h1>
+            <h1>Aaron個人出勤儀表板</h1>
             <div class="date-range" id="dateRange"></div>
         </div>
 
@@ -354,15 +354,15 @@
 
         <div class="charts-grid">
             <div class="chart-card tech-card">
-                <h3>出勤狀態分布</h3>
+                <h3>出席狀況</h3>
                 <canvas id="attendancePieChart"></canvas>
             </div>
             <div class="chart-card tech-card">
-                <h3>每日上課時數趨勢</h3>
+                <h3>每日上課時數</h3>
                 <canvas id="dailyClassHoursLine"></canvas>
             </div>
             <div class="chart-card tech-card">
-                <h3>每日在校時數統計</h3>
+                <h3>每日在校時數</h3>
                 <canvas id="dailyRawHoursBar"></canvas>
             </div>
         </div>
@@ -474,9 +474,12 @@
                 const isLocalhost = window.location.hostname === 'localhost' || 
                                   window.location.hostname === '127.0.0.1';
                 
+                // 获取当前页面的基础路径
+                const basePath = window.location.pathname.replace(/\/[^/]*$/, '/');
+                
                 // 使用更簡單的檔案名稱
                 const fileName = 'attendance_log.json';
-                const dataPath = isLocalhost ? fileName : '/' + fileName;
+                const dataPath = isLocalhost ? fileName : basePath + fileName;
                 
                 console.log('嘗試載入資料從:', dataPath);  // 除錯用
                 
