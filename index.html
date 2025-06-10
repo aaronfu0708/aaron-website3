@@ -259,57 +259,56 @@
         @media (max-width: 768px) {
             .container {
                 padding: 1rem 0.5rem;
-                
+                overflow-x: hidden;
             }
 
             .menu-container {
                 height: 280px;
-                margin-top:100px;
-                margin-bottom: 0;
+                margin-top: 50px;
+                margin-bottom: 20px;
+                transform: scale(0.8);
             }
 
             .rotating-container {
-                width: 300px;
-                height: 300px;
+                width: 280px;
+                height: 280px;
             }
 
             .menu-item {
-                width:  100px;
-                padding: 20px;
+                width: 90px;
+                padding: 12px;
+                font-size: 0.9rem;
             }
 
             .menu-item h3 {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 margin-bottom: 4px;
             }
 
             .menu-item .value {
-                font-size: 1.1rem;
+                font-size: 0.9rem;
             }
 
             .charts-grid {
-                width: 100vw;  
-                grid-template-columns: 1fr; 
+                width: 100%;
+                grid-template-columns: 1fr;
                 gap: 1rem;
+                padding: 0.5rem;
             }
 
             .chart-card {
-                min-height: unset;  
-                
-                padding: 1rem;
+                min-height: 300px;
+                padding: 0.8rem;
             }
 
             canvas {
-                height: 40vh !important; 
+                height: 250px !important;
             }
 
             .dashboard-header h1 {
-                padding: 40px;
+                padding: 20px;
                 font-size: 1.2rem;
-                font-weight: 700 ;
-                color: var(--primary);
-                margin-bottom: 0.5rem;
-                letter-spacing: 0.5em;
+                letter-spacing: 0.3em;
             }
         }
 
@@ -412,7 +411,7 @@
             container.appendChild(fragment);
         }
 
-       
+        // 使用防抖函數優化事件處理
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -428,17 +427,18 @@
         // 優化圖表更新
         function optimizedChartUpdate(chart) {
             if (!chart) return;
-        
+            
+            // 禁用動畫
             chart.options.animation = false;
             chart.options.responsiveAnimationDuration = 0;
             
-            
+            // 使用 requestAnimationFrame 進行更新
             requestAnimationFrame(() => {
-                chart.update('none');  
+                chart.update('none');  // 使用 'none' 模式更新
             });
         }
 
-        
+        // 優化旋轉容器的動畫
         let isAnimating = false;
         let lastFrameTime = 0;
         const FRAME_RATE = 30;  // 限制幀率
@@ -461,33 +461,63 @@
             requestAnimationFrame(updateRotation);
         }
 
+        // 載入資料
         async function loadData() {
             try {
-                const response = await fetch('attendance_log (1).json');
+                // 首先檢查是否為本地開發環境
+                const isLocalhost = window.location.hostname === 'localhost' || 
+                                  window.location.hostname === '127.0.0.1';
+                
+                // 根據環境選擇正確的路徑
+                const dataPath = isLocalhost ? 'attendance_log (1).json' : '/attendance_log (1).json';
+                
+                const response = await fetch(dataPath);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`無法載入資料 (狀態碼: ${response.status})`);
                 }
-                const data = await response.json();
+                const jsonData = await response.json();
 
-                const tableData = data.find(item => item.type === 'table' && item.name === 'attendance_log');
-                if (!tableData || !tableData.data || !Array.isArray(tableData.data)) {
-                    throw new Error('找不到出勤記錄資料');
+                // 尋找包含 attendance_log 表的對象
+                const tableData = jsonData.find(item => 
+                    item.type === 'table' && 
+                    item.name === 'attendance_log' && 
+                    item.data && 
+                    Array.isArray(item.data)
+                );
+
+                if (!tableData) {
+                    throw new Error('找不到出勤記錄資料表');
                 }
 
                 const attendanceData = tableData.data;
-                if (attendanceData.length === 0) {
-                    throw new Error('沒有找到出勤記錄');
+                if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
+                    throw new Error('出勤記錄為空');
                 }
+
+                // 確保數據格式正確
+                attendanceData.forEach((record, index) => {
+                    ['class_hours', 'raw_hours', 'attended_hours', 'late_hours', 'leave_early_hours', 'absent_hours'].forEach(field => {
+                        record[field] = parseFloat(record[field]) || 0;
+                    });
+                });
 
                 return attendanceData;
             } catch (error) {
-                console.error('載入資料時發生錯誤:', error);
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = `載入資料時發生錯誤: ${error.message}`;
+                console.error('資料載入錯誤:', error);
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'block';
+                errorMessage.style.backgroundColor = '#fee2e2';
+                errorMessage.style.color = '#991b1b';
+                errorMessage.style.padding = '1rem';
+                errorMessage.style.borderRadius = '8px';
+                errorMessage.style.margin = '1rem';
+                errorMessage.style.fontSize = '0.9rem';
+                errorMessage.textContent = `無法載入出勤資料，請確認網路連接並重新整理頁面。(${error.message})`;
                 return [];
             }
         }
 
+        // 計算統計數據
         function calculateStats(data) {
             const stats = {
                 totalClassHours: 0,
@@ -540,7 +570,7 @@
             return stats;
         }
 
-       
+        // 更新3D選單顯示
         function updateMenuDisplay(stats) {
             const attendanceRate = ((stats.totalAttendedHours / stats.totalClassHours) * 100).toFixed(1);
             menuItems = [
@@ -557,133 +587,239 @@
             document.getElementById('dateRange').textContent = dateRangeText;
         }
 
-      
+        // 更新圖表創建函數
         function createAttendancePieChart(stats) {
-            const ctx = document.getElementById('attendancePieChart').getContext('2d');
-            
-            if (charts.pie) {
-                charts.pie.destroy();
-            }
-            
-            charts.pie = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['出席', '缺席'],
-                    datasets: [{
-                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
-                        backgroundColor: ['#1E88E5', '#90CAF9'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    animation: {
-                        duration: 0  // 
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    },
-                    cutout: '70%'
+            try {
+                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+                
+                if (charts.pie) {
+                    charts.pie.destroy();
                 }
-            });
+                
+                const total = stats.totalAttendedHours + stats.totalAbsentHours;
+                const attendancePercentage = ((stats.totalAttendedHours / total) * 100).toFixed(1);
+                const absentPercentage = ((stats.totalAbsentHours / total) * 100).toFixed(1);
+                
+                charts.pie = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [`出席 (${attendancePercentage}%)`, `缺席 (${absentPercentage}%)`],
+                        datasets: [{
+                            data: [stats.totalAttendedHours, stats.totalAbsentHours],
+                            backgroundColor: ['#1E88E5', '#90CAF9'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 10 : 12
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            } catch (error) {
+                console.error('建立圓餅圖時發生錯誤:', error);
+            }
         }
 
         function createDailyClassHoursLine(data) {
-            const ctx = document.getElementById('dailyClassHoursLine').getContext('2d');
-            
-            if (charts.line) {
-                charts.line.destroy();
-            }
-            
-            charts.line = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(record => record.class_date),
-                    datasets: [{
-                        label: '上課時數',
-                        data: data.map(record => parseFloat(record.class_hours)),
-                        borderColor: '#2196F3',
-                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    animation: {
-                        duration: 0  // 
+            try {
+                const ctx = document.getElementById('dailyClassHoursLine').getContext('2d');
+                
+                if (charts.line) {
+                    charts.line.destroy();
+                }
+                
+                charts.line = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(record => record.class_date),
+                        datasets: [{
+                            label: '上課時數',
+                            data: data.map(record => record.class_hours),
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 10 : 12
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(204, 214, 246, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 10 : 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(204, 214, 246, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 8 : 10
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('建立折線圖時發生錯誤:', error);
+            }
         }
 
         function createDailyRawHoursBar(data) {
-            const ctx = document.getElementById('dailyRawHoursBar').getContext('2d');
-            
-            if (charts.bar) {
-                charts.bar.destroy();
-            }
-            
-            charts.bar = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(record => record.class_date),
-                    datasets: [{
-                        label: '在校時數',
-                        data: data.map(record => parseFloat(record.raw_hours)),
-                        backgroundColor: '#64B5F6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    animation: {
-                        duration: 0  // 移除動畫
+            try {
+                const ctx = document.getElementById('dailyRawHoursBar').getContext('2d');
+                
+                if (charts.bar) {
+                    charts.bar.destroy();
+                }
+                
+                charts.bar = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(record => record.class_date),
+                        datasets: [{
+                            label: '在校時數',
+                            data: data.map(record => record.raw_hours),
+                            backgroundColor: '#64B5F6'
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 10 : 12
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(204, 214, 246, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 10 : 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(204, 214, 246, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ccd6f6',
+                                    font: {
+                                        size: window.innerWidth <= 768 ? 8 : 10
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('建立長條圖時發生錯誤:', error);
+            }
         }
 
         // 優化初始化過程
         async function initDashboard() {
             try {
+                // 顯示載入中狀態
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'block';
+                errorMessage.style.backgroundColor = '#e8f5e9';
+                errorMessage.style.color = '#2e7d32';
+                errorMessage.textContent = '資料載入中...';
+
                 const data = await loadData();
                 if (data.length === 0) {
-                    document.getElementById('errorMessage').style.display = 'block';
-                    document.getElementById('errorMessage').textContent = '無法載入資料或資料為空';
-                    return;
+                    return; // 錯誤已經在 loadData 中處理
                 }
+
+                // 隱藏載入訊息
+                errorMessage.style.display = 'none';
 
                 const stats = calculateStats(data);
                 
-             
-                requestIdleCallback(() => {
-                    updateMenuDisplay(stats);
-                });
-
-                Promise.all([
-                    createAttendancePieChart(stats),
-                    createDailyClassHoursLine(data),
-                    createDailyRawHoursBar(data)
+                // 使用 Promise.all 確保所有圖表都創建完成
+                await Promise.all([
+                    new Promise(resolve => {
+                        requestAnimationFrame(() => {
+                            updateMenuDisplay(stats);
+                            resolve();
+                        });
+                    }),
+                    new Promise(resolve => {
+                        requestAnimationFrame(() => {
+                            createAttendancePieChart(stats);
+                            resolve();
+                        });
+                    }),
+                    new Promise(resolve => {
+                        requestAnimationFrame(() => {
+                            createDailyClassHoursLine(data);
+                            resolve();
+                        });
+                    }),
+                    new Promise(resolve => {
+                        requestAnimationFrame(() => {
+                            createDailyRawHoursBar(data);
+                            resolve();
+                        });
+                    })
                 ]);
 
             } catch (error) {
-                console.error('初始化儀表板時發生錯誤:', error);
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = '初始化儀表板時發生錯誤';
+                console.error('儀表板初始化錯誤:', error);
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'block';
+                errorMessage.style.backgroundColor = '#fee2e2';
+                errorMessage.style.color = '#991b1b';
+                errorMessage.textContent = '儀表板初始化失敗，請重新整理頁面試試。';
             }
         }
 
@@ -716,9 +852,9 @@
             initDashboard();
         });
 
-    
+        // 添加未來科技感動畫
         document.addEventListener('DOMContentLoaded', () => {
-          
+            // 標題動畫
             anime({
                 targets: '.tech-text',
                 opacity: [0, 1],
@@ -727,6 +863,7 @@
                 easing: 'easeOutExpo'
             });
 
+            // 卡片入場動畫
             anime({
                 targets: '.tech-card',
                 opacity: [0, 1],
@@ -736,7 +873,7 @@
                 easing: 'easeOutExpo'
             });
 
-     
+            // 為卡片添加懸浮效果
             document.querySelectorAll('.tech-card').forEach(card => {
                 card.addEventListener('mouseenter', () => {
                     anime({
