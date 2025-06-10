@@ -5,22 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>個人出勤儀表板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            --card-bg: #ffffff;
-            --primary: #2196F3;
-            --primary-light: #64B5F6;
-            --success: #4CAF50;
-            --warning: #FFA726;
-            --danger: #EF5350;
-            --text-primary: #263238;
-            --text-secondary: #546E7A;
+            --bg-gradient: linear-gradient(135deg, #0a192f 0%, #112240 100%);
+            --card-bg: rgba(16, 32, 64, 0.95);
+            --primary: #64ffda;
+            --primary-light: #64ffda80;
+            --success: #64ffda;
+            --warning: #ffb74d;
+            --danger: #ff5252;
+            --text-primary: #ccd6f6;
+            --text-secondary: #8892b0;
             --border-radius: 16px;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-sm: 0 2px 4px rgba(100, 255, 218, 0.1);
+            --shadow: 0 4px 8px rgba(100, 255, 218, 0.15);
+            --shadow-lg: 0 8px 16px rgba(100, 255, 218, 0.2);
+            --glow: 0 0 20px rgba(100, 255, 218, 0.3);
+            --sidebar-width: 300px;
         }
 
         * {
@@ -40,14 +43,18 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;  
         }
 
         .dashboard-header {
+            width: 100%;  
             text-align: center;
-            margin-bottom: 3.5rem;
+            margin-bottom: 1.5rem;
             position: relative;
-            padding-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
         }
 
         .dashboard-header::after {
@@ -63,143 +70,123 @@
         }
 
         .dashboard-header h1 {
-            font-size: 2.75rem;
-            font-weight: 700;
+            padding: 60px;
+            font-size: 2rem;
+            font-weight: 700 ;
             color: var(--primary);
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.025em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1.5em;
         }
 
         .date-range {
             color: var(--text-secondary);
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 400;
             opacity: 0.9;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3.5rem;
-            padding: 0.5rem;
+        /* 3D Menu Styles */
+        .menu-container {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            perspective: 1200px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translateZ(0);
+            will-change: transform;
+            touch-action: pan-x;
         }
 
-        .stat-card {
+        .rotating-container {
+            width: 350px;
+            height: 350px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: autoRotate 19s linear infinite;
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+
+        @keyframes autoRotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .menu-item {
+            position: absolute;
+            width: 130px;
+            padding: 8px;
             background: var(--card-bg);
-            padding: 2rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease-out;
             text-align: center;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
+            opacity: 0.95;
+            border: 1px solid var(--primary-light);
+            backdrop-filter: blur(12px);
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--primary-light);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .menu-item:hover {
+            transform: scale(1.05);
         }
 
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .menu-item h3 {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            text-shadow: 0 0 8px rgba(100, 255, 218, 0.4);
         }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-card:hover::after {
-            opacity: 0.5;
-        }
-
-        .stat-card h3 {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .menu-item .value {
             color: var(--primary);
-            line-height: 1;
-            margin-bottom: 0.75rem;
-            position: relative;
-            display: inline-block;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-shadow: 0 0 12px rgba(100, 255, 218, 0.6);
         }
 
-        .stat-value::after {
-            content: '';
-            position: absolute;
-            bottom: -0.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40%;
-            height: 2px;
-            background: var(--primary-light);
-            border-radius: 2px;
-            opacity: 0.5;
-        }
-
+        /* Original Dashboard Styles */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
             padding: 0.5rem;
+            width: 100%;
         }
 
         .chart-card {
             background: var(--card-bg);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            transition: none;
             position: relative;
             overflow: hidden;
+            min-height: 350px;
+            border: 1px solid var(--primary-light);
+            backdrop-filter: blur(12px);
         }
 
         .chart-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            transform: none;
+            box-shadow: var(--shadow);
         }
 
         .chart-card h3 {
-            color: var(--text-primary);
-            font-size: 1.35rem;
-            font-weight: 600;
-            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
             text-align: center;
             position: relative;
             padding-bottom: 0.75rem;
+            color: var(--text-primary);
         }
 
         .chart-card h3::after {
@@ -229,75 +216,147 @@
             display: none;
         }
 
-        @media (max-width: 768px) {
+     
+    
             .container {
-                padding: 1rem;
+                padding: 1rem; 
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .menu-container {
+                height: 450px;
+                margin-top: 200px;
+                margin-bottom: 0; 
+            }
+
+            .menu {
+                --menu-size: 450px;
+            }
+
+            .menu-item {
+                --item-size: 190px;
+            }
+
+            .rotating-container {
+                width: 1000px; 
+                height: 450px;
+            }
+
+            .menu-item {
+                width: 150px;  
+                padding: 15px;
+            }
+
+            .menu-item h3 {
+                font-size: 1rem;
+            }
+
+            .menu-item .value {
+                font-size: 1.6rem;
+            }
+    
+
+        /* 手機 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem 0.5rem;
+                
+            }
+
+            .menu-container {
+                height: 280px;
+                margin-top:100px;
+                margin-bottom: 0;
+            }
+
+            .rotating-container {
+                width: 300px;
+                height: 300px;
+            }
+
+            .menu-item {
+                width:  100px;
+                padding: 20px;
+            }
+
+            .menu-item h3 {
+                font-size: 0.75rem;
+                margin-bottom: 4px;
+            }
+
+            .menu-item .value {
+                font-size: 1.1rem;
             }
 
             .charts-grid {
-                grid-template-columns: 1fr;
+                width: 100vw;  
+                grid-template-columns: 1fr; 
+                gap: 1rem;
             }
 
-            .stat-value {
-                font-size: 1.75rem;
+            .chart-card {
+                min-height: unset;  
+                
+                padding: 1rem;
+            }
+
+            canvas {
+                height: 40vh !important; 
             }
 
             .dashboard-header h1 {
-                font-size: 2rem;
+                padding: 40px;
+                font-size: 1.2rem;
+                font-weight: 700 ;
+                color: var(--primary);
+                margin-bottom: 0.5rem;
+                letter-spacing: 0.5em;
             }
         }
+
+        
+
+        
+            .container {
+                padding: 1rem;
+                width: 100%;
+                max-width: none;  
+            }
+
+            .charts-grid {
+                width: 88vw;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .chart-card {
+                min-height: 350px;
+            }
+      
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="dashboard-header">
+        <div class="dashboard-header tech-text">
             <h1>Aaron出勤儀表板</h1>
             <div class="date-range" id="dateRange"></div>
         </div>
 
         <div id="errorMessage"></div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>總課程時數</h3>
-                <div class="stat-value" id="totalClassHours">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>實際上課時數</h3>
-                <div class="stat-value" id="totalAttendedHours">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>出勤比率</h3>
-                <div class="stat-value" id="attendanceRate">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>缺席時數</h3>
-                <div class="stat-value" id="totalAbsentHours">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>遲到時數</h3>
-                <div class="stat-value" id="totalLateHours">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>早退時數</h3>
-                <div class="stat-value" id="totalLeaveEarlyHours">-</div>
-            </div>
+        <div class="menu-container">
+            <div class="rotating-container" id="container"></div>
         </div>
 
         <div class="charts-grid">
-            <div class="chart-card">
-                <h3>出席狀況分布</h3>
+            <div class="chart-card tech-card">
+                <h3>出勤狀態分布</h3>
                 <canvas id="attendancePieChart"></canvas>
             </div>
-            <div class="chart-card">
+            <div class="chart-card tech-card">
                 <h3>每日上課時數趨勢</h3>
                 <canvas id="dailyClassHoursLine"></canvas>
             </div>
-            <div class="chart-card">
+            <div class="chart-card tech-card">
                 <h3>每日在校時數統計</h3>
                 <canvas id="dailyRawHoursBar"></canvas>
             </div>
@@ -305,6 +364,104 @@
     </div>
 
     <script>
+        // 加入效能優化的變數
+        let charts = {
+            pie: null,
+            line: null,
+            bar: null
+        };
+        let animationFrame = null;
+        
+        // 3D Menu Data and Logic
+        let menuItems = [
+            { title: '總課程時數', value: '載入中...' },
+            { title: '實際上課時數', value: '載入中...' },
+            { title: '缺席時數', value: '載入中...' },
+            { title: '遲到時數', value: '載入中...' },
+            { title: '早退時數', value: '載入中...' },
+            { title: '出勤比率', value: '載入中...' }
+        ];
+
+        const container = document.getElementById('container');
+        let currentRotation = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startRotation = 0;
+        let lastDragTime = 0;
+        let velocity = 0;
+        let lastDeltaX = 0;
+        let rafId = null;
+
+        function createMenuItems() {
+            const fragment = document.createDocumentFragment();
+            menuItems.forEach((item, index) => {
+                const element = document.createElement('div');
+                element.className = 'menu-item';
+                element.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <div class="value">${item.value}</div>
+                `;
+
+                const angle = (index / menuItems.length) * 360;
+                const radius = window.innerWidth <= 768 ? 130 : 180;
+                element.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+                
+                fragment.appendChild(element);
+            });
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        }
+
+        // 使用防抖函數優化事件處理
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 優化圖表更新
+        function optimizedChartUpdate(chart) {
+            if (!chart) return;
+            
+            // 禁用動畫
+            chart.options.animation = false;
+            chart.options.responsiveAnimationDuration = 0;
+            
+            // 使用 requestAnimationFrame 進行更新
+            requestAnimationFrame(() => {
+                chart.update('none');  // 使用 'none' 模式更新
+            });
+        }
+
+        // 優化旋轉容器的動畫
+        let isAnimating = false;
+        let lastFrameTime = 0;
+        const FRAME_RATE = 30;  // 限制幀率
+        const FRAME_INTERVAL = 1000 / FRAME_RATE;
+
+        function updateRotation(timestamp) {
+            if (!isAnimating) return;
+
+            const elapsed = timestamp - lastFrameTime;
+            
+            if (elapsed > FRAME_INTERVAL) {
+                const container = document.getElementById('container');
+                if (container) {
+                    currentRotation = (currentRotation + 0.5) % 360;
+                    container.style.transform = `rotateY(${currentRotation}deg)`;
+                    lastFrameTime = timestamp;
+                }
+            }
+
+            requestAnimationFrame(updateRotation);
+        }
+
         // 載入資料
         async function loadData() {
             try {
@@ -341,27 +498,41 @@
                 totalAbsentHours: 0,
                 totalLateHours: 0,
                 totalLeaveEarlyHours: 0,
+                totalDays: 0,
+                onTimeCount: 0,
+                lateCount: 0,
+                leaveEarlyCount: 0,
+                absentDays: 0,
+                overtimeHours: 0
             };
 
             if (data.length === 0) {
                 return stats;
             }
 
-            data.forEach((record, index) => {
-                try {
-                    stats.totalClassHours += parseFloat(record.class_hours) || 0;
-                    stats.totalAttendedHours += parseFloat(record.attended_hours) || 0;
-                    stats.totalAbsentHours += parseFloat(record.absent_hours) || 0;
-                    stats.totalLateHours += parseFloat(record.late_hours) || 0;
-                    stats.totalLeaveEarlyHours += parseFloat(record.leave_early_hours) || 0;
-                } catch (error) {
-                    console.error(`處理第 ${index + 1} 筆資料時發生錯誤:`, error);
+            data.forEach((record) => {
+                stats.totalDays++;
+                stats.totalClassHours += parseFloat(record.class_hours) || 0;
+                stats.totalAttendedHours += parseFloat(record.attended_hours) || 0;
+                stats.totalAbsentHours += parseFloat(record.absent_hours) || 0;
+                stats.totalLateHours += parseFloat(record.late_hours) || 0;
+                stats.totalLeaveEarlyHours += parseFloat(record.leave_early_hours) || 0;
+
+                // Calculate overtime (assuming raw_hours > class_hours means overtime)
+                const rawHours = parseFloat(record.raw_hours) || 0;
+                const classHours = parseFloat(record.class_hours) || 0;
+                if (rawHours > classHours) {
+                    stats.overtimeHours += (rawHours - classHours);
                 }
+
+                // Count specific cases
+                if (parseFloat(record.late_hours) > 0) stats.lateCount++;
+                if (parseFloat(record.leave_early_hours) > 0) stats.leaveEarlyCount++;
+                if (parseFloat(record.absent_hours) === parseFloat(record.class_hours)) stats.absentDays++;
+                if (parseFloat(record.late_hours) === 0 && parseFloat(record.leave_early_hours) === 0) stats.onTimeCount++;
             });
 
-            stats.attendanceRate = stats.totalClassHours > 0 
-                ? ((stats.totalAttendedHours / stats.totalClassHours) * 100).toFixed(1)
-                : '0.0';
+            stats.onTimeRate = ((stats.onTimeCount / stats.totalDays) * 100).toFixed(1);
 
             const dates = data.map(record => new Date(record.class_date));
             stats.dateRange = {
@@ -372,42 +543,46 @@
             return stats;
         }
 
-        // 更新統計數據顯示
-        function updateStatsDisplay(stats) {
-            try {
-                document.getElementById('totalClassHours').textContent = stats.totalClassHours.toFixed(1);
-                document.getElementById('totalAttendedHours').textContent = stats.totalAttendedHours.toFixed(1);
-                document.getElementById('totalAbsentHours').textContent = stats.totalAbsentHours.toFixed(1);
-                document.getElementById('totalLateHours').textContent = stats.totalLateHours.toFixed(1);
-                document.getElementById('totalLeaveEarlyHours').textContent = stats.totalLeaveEarlyHours.toFixed(1);
-                document.getElementById('attendanceRate').textContent = `${stats.attendanceRate}%`;
-
-                const dateRangeText = `${stats.dateRange.start.toLocaleDateString()} - ${stats.dateRange.end.toLocaleDateString()}`;
-                document.getElementById('dateRange').textContent = `統計期間: ${dateRangeText}`;
-            } catch (error) {
-                console.error('更新統計顯示時發生錯誤:', error);
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = '更新統計顯示時發生錯誤';
-            }
+        // 更新3D選單顯示
+        function updateMenuDisplay(stats) {
+            const attendanceRate = ((stats.totalAttendedHours / stats.totalClassHours) * 100).toFixed(1);
+            menuItems = [
+                { title: '總課程時數', value: `${stats.totalClassHours.toFixed(1)} 小時` },
+                { title: '實際上課時數', value: `${stats.totalAttendedHours.toFixed(1)} 小時` },
+                { title: '缺席時數', value: `${stats.totalAbsentHours.toFixed(1)} 小時` },
+                { title: '遲到時數', value: `${stats.totalLateHours.toFixed(1)} 小時` },
+                { title: '早退時數', value: `${stats.totalLeaveEarlyHours.toFixed(1)} 小時` },
+                { title: '出勤比率', value: `${attendanceRate}%` }
+            ];
+            createMenuItems();
+            
+            const dateRangeText = `${stats.dateRange.start.toLocaleDateString('zh-TW')} - ${stats.dateRange.end.toLocaleDateString('zh-TW')}`;
+            document.getElementById('dateRange').textContent = dateRangeText;
         }
 
-        // 創建出席狀況圓餅圖
+        // 優化圖表創建
         function createAttendancePieChart(stats) {
             const ctx = document.getElementById('attendancePieChart').getContext('2d');
-            new Chart(ctx, {
+            
+            if (charts.pie) {
+                charts.pie.destroy();
+            }
+            
+            charts.pie = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['出席', '缺席'],
                     datasets: [{
-                                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
-                backgroundColor: ['#1E88E5', '#90CAF9'],
-                borderWidth: 0,
-                borderColor: '#ffffff',
-                hoverBackgroundColor: ['#1565C0', '#64B5F6']
+                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
+                        backgroundColor: ['#1E88E5', '#90CAF9'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
+                    animation: {
+                        duration: 0  // 移除動畫
+                    },
                     plugins: {
                         legend: {
                             position: 'bottom'
@@ -418,84 +593,74 @@
             });
         }
 
-        // 創建每日上課時數折線圖
         function createDailyClassHoursLine(data) {
             const ctx = document.getElementById('dailyClassHoursLine').getContext('2d');
-            const dates = data.map(record => record.class_date);
-            const hours = data.map(record => parseFloat(record.class_hours));
-
-            new Chart(ctx, {
+            
+            if (charts.line) {
+                charts.line.destroy();
+            }
+            
+            charts.line = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: dates,
+                    labels: data.map(record => record.class_date),
                     datasets: [{
                         label: '上課時數',
-                        data: hours,
+                        data: data.map(record => parseFloat(record.class_hours)),
                         borderColor: '#2196F3',
                         backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#2196F3'
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+                    animation: {
+                        duration: 0  // 移除動畫
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '時數'
-                            }
+                            max: 10
                         }
                     }
                 }
             });
         }
 
-        // 創建每日在校時數長條圖
         function createDailyRawHoursBar(data) {
             const ctx = document.getElementById('dailyRawHoursBar').getContext('2d');
-            const dates = data.map(record => record.class_date);
-            const hours = data.map(record => parseFloat(record.raw_hours));
-
-            new Chart(ctx, {
+            
+            if (charts.bar) {
+                charts.bar.destroy();
+            }
+            
+            charts.bar = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: dates,
+                    labels: data.map(record => record.class_date),
                     datasets: [{
                         label: '在校時數',
-                        data: hours,
-                        backgroundColor: '#64B5F6',
-                        borderRadius: 4
+                        data: data.map(record => parseFloat(record.raw_hours)),
+                        backgroundColor: '#64B5F6'
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+                    animation: {
+                        duration: 0  // 移除動畫
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '時數'
-                            }
+                            max: 10
                         }
                     }
                 }
             });
         }
 
-        // 初始化儀表板
+        // 優化初始化過程
         async function initDashboard() {
             try {
                 const data = await loadData();
@@ -504,12 +669,21 @@
                     document.getElementById('errorMessage').textContent = '無法載入資料或資料為空';
                     return;
                 }
+
                 const stats = calculateStats(data);
                 
-                updateStatsDisplay(stats);
-                createAttendancePieChart(stats);
-                createDailyClassHoursLine(data);
-                createDailyRawHoursBar(data);
+                // 使用 requestIdleCallback 延遲非關鍵更新
+                requestIdleCallback(() => {
+                    updateMenuDisplay(stats);
+                });
+
+                // 批量創建圖表
+                Promise.all([
+                    createAttendancePieChart(stats),
+                    createDailyClassHoursLine(data),
+                    createDailyRawHoursBar(data)
+                ]);
+
             } catch (error) {
                 console.error('初始化儀表板時發生錯誤:', error);
                 document.getElementById('errorMessage').style.display = 'block';
@@ -517,8 +691,85 @@
             }
         }
 
-        // 當頁面載入完成時初始化儀表板
-        document.addEventListener('DOMContentLoaded', initDashboard);
+        // 優化事件監聽器
+        const debouncedResize = debounce(() => {
+            if (charts.pie) optimizedChartUpdate(charts.pie);
+            if (charts.line) optimizedChartUpdate(charts.line);
+            if (charts.bar) optimizedChartUpdate(charts.bar);
+        }, 250);
+
+        window.addEventListener('resize', debouncedResize, { passive: true });
+        
+        // 使用 Intersection Observer 優化可見性處理
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.target.classList.contains('rotating-container')) {
+                    isAnimating = entry.isIntersecting;
+                    if (isAnimating) {
+                        requestAnimationFrame(updateRotation);
+                    }
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.rotating-container');
+            if (container) {
+                observer.observe(container);
+            }
+            initDashboard();
+        });
+
+        // 添加未來科技感動畫
+        document.addEventListener('DOMContentLoaded', () => {
+            // 標題動畫
+            anime({
+                targets: '.tech-text',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 1200,
+                easing: 'easeOutExpo'
+            });
+
+            // 卡片入場動畫
+            anime({
+                targets: '.tech-card',
+                opacity: [0, 1],
+                translateY: [60, 0],
+                delay: anime.stagger(200, {start: 600}),
+                duration: 1200,
+                easing: 'easeOutExpo'
+            });
+
+            // 為卡片添加懸浮效果
+            document.querySelectorAll('.tech-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    anime({
+                        targets: card,
+                        scale: 1.02,
+                        boxShadow: [
+                            getComputedStyle(document.documentElement).getPropertyValue('--shadow-lg'),
+                            '0 12px 24px rgba(100, 255, 218, 0.3)'
+                        ],
+                        duration: 400,
+                        easing: 'easeOutQuad'
+                    });
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    anime({
+                        targets: card,
+                        scale: 1,
+                        boxShadow: [
+                            '0 12px 24px rgba(100, 255, 218, 0.3)',
+                            getComputedStyle(document.documentElement).getPropertyValue('--shadow')
+                        ],
+                        duration: 400,
+                        easing: 'easeOutQuad'
+                    });
+                });
+            });
+        });
     </script>
 </body>
-</html> 
+</html>
