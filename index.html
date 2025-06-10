@@ -207,19 +207,25 @@
         }
 
         #errorMessage {
-            background: #fee2e2;
+            background: rgba(254, 226, 226, 0.9);
             color: #991b1b;
             padding: 1rem;
             border-radius: var(--border-radius);
-            margin-bottom: 1.5rem;
+            margin: 1rem auto;
             text-align: center;
             display: none;
+            max-width: 80%;
+            border: 1px solid #991b1b;
+            box-shadow: var(--shadow);
+            font-weight: 500;
+            z-index: 1000;
+            position: relative;
         }
 
      
     
             .container {
-                padding: 1rem; 
+                padding: 1rem;
             }
 
             .menu-container {
@@ -301,7 +307,7 @@
                 padding: 0.8rem;
             }
 
-            canvas {
+            .canvas {
                 height: 250px !important;
             }
 
@@ -468,40 +474,63 @@
                 const isLocalhost = window.location.hostname === 'localhost' || 
                                   window.location.hostname === '127.0.0.1';
                 
-                // 根據環境選擇正確的路徑
-                const dataPath = isLocalhost ? 'attendance_log (1).json' : '/attendance_log (1).json';
+                // 使用更簡單的檔案名稱
+                const fileName = 'attendance_log.json';
+                const dataPath = isLocalhost ? fileName : '/' + fileName;
                 
-                const response = await fetch(dataPath);
-                if (!response.ok) {
-                    throw new Error(`無法載入資料 (狀態碼: ${response.status})`);
-                }
-                const jsonData = await response.json();
+                console.log('嘗試載入資料從:', dataPath);  // 除錯用
+                
+                try {
+                    const response = await fetch(dataPath);
+                    if (!response.ok) {
+                        throw new Error(`無法載入資料 (狀態碼: ${response.status})`);
+                    }
+                    
+                    console.log('成功獲取回應');  // 除錯用
+                    
+                    const jsonData = await response.json();
+                    console.log('成功解析JSON');  // 除錯用
 
-                // 尋找包含 attendance_log 表的對象
-                const tableData = jsonData.find(item => 
-                    item.type === 'table' && 
-                    item.name === 'attendance_log' && 
-                    item.data && 
-                    Array.isArray(item.data)
-                );
+                    // 尋找包含 attendance_log 表的對象
+                    const tableData = jsonData.find(item => 
+                        item.type === 'table' && 
+                        item.name === 'attendance_log' && 
+                        item.data && 
+                        Array.isArray(item.data)
+                    );
 
-                if (!tableData) {
-                    throw new Error('找不到出勤記錄資料表');
-                }
+                    if (!tableData) {
+                        throw new Error('找不到出勤記錄資料表');
+                    }
 
-                const attendanceData = tableData.data;
-                if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
-                    throw new Error('出勤記錄為空');
-                }
+                    const attendanceData = tableData.data;
+                    if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
+                        throw new Error('出勤記錄為空');
+                    }
 
-                // 確保數據格式正確
-                attendanceData.forEach((record, index) => {
-                    ['class_hours', 'raw_hours', 'attended_hours', 'late_hours', 'leave_early_hours', 'absent_hours'].forEach(field => {
-                        record[field] = parseFloat(record[field]) || 0;
+                    console.log('成功找到資料:', attendanceData.length, '筆記錄');  // 除錯用
+
+                    // 確保數據格式正確
+                    attendanceData.forEach((record, index) => {
+                        ['class_hours', 'raw_hours', 'attended_hours', 'late_hours', 'leave_early_hours', 'absent_hours'].forEach(field => {
+                            record[field] = parseFloat(record[field]) || 0;
+                        });
                     });
-                });
 
-                return attendanceData;
+                    return attendanceData;
+                } catch (error) {
+                    console.error('資料解析錯誤:', error);
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.style.display = 'block';
+                    errorMessage.style.backgroundColor = '#fee2e2';
+                    errorMessage.style.color = '#991b1b';
+                    errorMessage.style.padding = '1rem';
+                    errorMessage.style.borderRadius = '8px';
+                    errorMessage.style.margin = '1rem';
+                    errorMessage.style.fontSize = '0.9rem';
+                    errorMessage.textContent = `資料解析錯誤，請確認網路連接並重新整理頁面。(${error.message})`;
+                    return [];
+                }
             } catch (error) {
                 console.error('資料載入錯誤:', error);
                 const errorMessage = document.getElementById('errorMessage');
@@ -539,11 +568,11 @@
 
             data.forEach((record) => {
                 stats.totalDays++;
-                stats.totalClassHours += parseFloat(record.class_hours) || 0;
-                stats.totalAttendedHours += parseFloat(record.attended_hours) || 0;
-                stats.totalAbsentHours += parseFloat(record.absent_hours) || 0;
-                stats.totalLateHours += parseFloat(record.late_hours) || 0;
-                stats.totalLeaveEarlyHours += parseFloat(record.leave_early_hours) || 0;
+                    stats.totalClassHours += parseFloat(record.class_hours) || 0;
+                    stats.totalAttendedHours += parseFloat(record.attended_hours) || 0;
+                    stats.totalAbsentHours += parseFloat(record.absent_hours) || 0;
+                    stats.totalLateHours += parseFloat(record.late_hours) || 0;
+                    stats.totalLeaveEarlyHours += parseFloat(record.leave_early_hours) || 0;
 
                 // Calculate overtime (assuming raw_hours > class_hours means overtime)
                 const rawHours = parseFloat(record.raw_hours) || 0;
@@ -582,7 +611,7 @@
                 { title: '出勤比率', value: `${attendanceRate}%` }
             ];
             createMenuItems();
-            
+
             const dateRangeText = `${stats.dateRange.start.toLocaleDateString('zh-TW')} - ${stats.dateRange.end.toLocaleDateString('zh-TW')}`;
             document.getElementById('dateRange').textContent = dateRangeText;
         }
@@ -590,7 +619,7 @@
         // 更新圖表創建函數
         function createAttendancePieChart(stats) {
             try {
-                const ctx = document.getElementById('attendancePieChart').getContext('2d');
+            const ctx = document.getElementById('attendancePieChart').getContext('2d');
                 
                 if (charts.pie) {
                     charts.pie.destroy();
@@ -601,20 +630,20 @@
                 const absentPercentage = ((stats.totalAbsentHours / total) * 100).toFixed(1);
                 
                 charts.pie = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
+                type: 'doughnut',
+                data: {
                         labels: [`出席 (${attendancePercentage}%)`, `缺席 (${absentPercentage}%)`],
-                        datasets: [{
-                            data: [stats.totalAttendedHours, stats.totalAbsentHours],
-                            backgroundColor: ['#1E88E5', '#90CAF9'],
+                    datasets: [{
+                                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
+                backgroundColor: ['#1E88E5', '#90CAF9'],
                             borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
+                    plugins: {
+                        legend: {
                                 position: 'bottom',
                                 labels: {
                                     color: '#ccd6f6',
@@ -622,11 +651,11 @@
                                         size: window.innerWidth <= 768 ? 10 : 12
                                     }
                                 }
-                            }
-                        },
-                        cutout: '70%'
-                    }
-                });
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
             } catch (error) {
                 console.error('建立圓餅圖時發生錯誤:', error);
             }
@@ -634,41 +663,41 @@
 
         function createDailyClassHoursLine(data) {
             try {
-                const ctx = document.getElementById('dailyClassHoursLine').getContext('2d');
+            const ctx = document.getElementById('dailyClassHoursLine').getContext('2d');
                 
                 if (charts.line) {
                     charts.line.destroy();
                 }
                 
                 charts.line = new Chart(ctx, {
-                    type: 'line',
-                    data: {
+                type: 'line',
+                data: {
                         labels: data.map(record => record.class_date),
-                        datasets: [{
-                            label: '上課時數',
+                    datasets: [{
+                        label: '上課時數',
                             data: data.map(record => record.class_hours),
-                            borderColor: '#2196F3',
-                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                            tension: 0.4,
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        tension: 0.4,
                             fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
+                    plugins: {
+                        legend: {
                                 labels: {
                                     color: '#ccd6f6',
                                     font: {
                                         size: window.innerWidth <= 768 ? 10 : 12
                                     }
                                 }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
                                 grid: {
                                     color: 'rgba(204, 214, 246, 0.1)'
                                 },
@@ -690,11 +719,11 @@
                                     },
                                     maxRotation: 45,
                                     minRotation: 45
-                                }
                             }
                         }
                     }
-                });
+                }
+            });
             } catch (error) {
                 console.error('建立折線圖時發生錯誤:', error);
             }
@@ -702,38 +731,38 @@
 
         function createDailyRawHoursBar(data) {
             try {
-                const ctx = document.getElementById('dailyRawHoursBar').getContext('2d');
+            const ctx = document.getElementById('dailyRawHoursBar').getContext('2d');
                 
                 if (charts.bar) {
                     charts.bar.destroy();
                 }
                 
                 charts.bar = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
+                type: 'bar',
+                data: {
                         labels: data.map(record => record.class_date),
-                        datasets: [{
-                            label: '在校時數',
+                    datasets: [{
+                        label: '在校時數',
                             data: data.map(record => record.raw_hours),
                             backgroundColor: '#64B5F6'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
+                    plugins: {
+                        legend: {
                                 labels: {
                                     color: '#ccd6f6',
                                     font: {
                                         size: window.innerWidth <= 768 ? 10 : 12
                                     }
                                 }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
                                 grid: {
                                     color: 'rgba(204, 214, 246, 0.1)'
                                 },
@@ -755,11 +784,11 @@
                                     },
                                     maxRotation: 45,
                                     minRotation: 45
-                                }
                             }
                         }
                     }
-                });
+                }
+            });
             } catch (error) {
                 console.error('建立長條圖時發生錯誤:', error);
             }
@@ -795,19 +824,19 @@
                     }),
                     new Promise(resolve => {
                         requestAnimationFrame(() => {
-                            createAttendancePieChart(stats);
+                createAttendancePieChart(stats);
                             resolve();
                         });
                     }),
                     new Promise(resolve => {
                         requestAnimationFrame(() => {
-                            createDailyClassHoursLine(data);
+                createDailyClassHoursLine(data);
                             resolve();
                         });
                     }),
                     new Promise(resolve => {
                         requestAnimationFrame(() => {
-                            createDailyRawHoursBar(data);
+                createDailyRawHoursBar(data);
                             resolve();
                         });
                     })
@@ -904,4 +933,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
