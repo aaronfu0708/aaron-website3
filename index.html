@@ -8,15 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #f6f8fc 0%, #f0f4f8 100%);
+            --bg-gradient: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
             --card-bg: #ffffff;
-            --primary: #4f46e5;
-            --primary-light: #818cf8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
+            --primary: #2196F3;
+            --primary-light: #64B5F6;
+            --success: #4CAF50;
+            --warning: #FFA726;
+            --danger: #EF5350;
+            --text-primary: #263238;
+            --text-secondary: #546E7A;
             --border-radius: 16px;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -40,43 +40,64 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 3rem 2rem;
         }
 
         .dashboard-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 3.5rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
         }
 
         .dashboard-header h1 {
-            font-size: 2.5rem;
+            font-size: 2.75rem;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             letter-spacing: -0.025em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .date-range {
             color: var(--text-secondary);
-            font-size: 1.1rem;
-            font-weight: 300;
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3.5rem;
+            padding: 0.5rem;
         }
 
         .stat-card {
             background: var(--card-bg);
-            padding: 1.5rem;
+            padding: 2rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .stat-card::before {
@@ -91,6 +112,18 @@
             transition: opacity 0.3s ease;
         }
 
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
         .stat-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-lg);
@@ -100,41 +133,85 @@
             opacity: 1;
         }
 
+        .stat-card:hover::after {
+            opacity: 0.5;
+        }
+
         .stat-card h3 {
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 500;
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .stat-value {
-            font-size: 2.25rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary);
             line-height: 1;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .stat-value::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 2px;
+            background: var(--primary-light);
+            border-radius: 2px;
+            opacity: 0.5;
         }
 
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2.5rem;
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+            padding: 0.5rem;
         }
 
         .chart-card {
             background: var(--card-bg);
-            padding: 1.5rem;
+            padding: 2rem;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
         }
 
         .chart-card h3 {
             color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
             text-align: center;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        .chart-card h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: var(--primary-light);
+            border-radius: 2px;
         }
 
         canvas {
@@ -178,7 +255,7 @@
 <body>
     <div class="container">
         <div class="dashboard-header">
-            <h1>個人出勤儀表板</h1>
+            <h1>Aaron出勤儀表板</h1>
             <div class="date-range" id="dateRange"></div>
         </div>
 
@@ -322,9 +399,11 @@
                 data: {
                     labels: ['出席', '缺席'],
                     datasets: [{
-                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
-                        backgroundColor: ['#10b981', '#ef4444'],
-                        borderWidth: 0
+                                        data: [stats.totalAttendedHours, stats.totalAbsentHours],
+                backgroundColor: ['#1E88E5', '#90CAF9'],
+                borderWidth: 0,
+                borderColor: '#ffffff',
+                hoverBackgroundColor: ['#1565C0', '#64B5F6']
                     }]
                 },
                 options: {
@@ -352,11 +431,11 @@
                     datasets: [{
                         label: '上課時數',
                         data: hours,
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: '#4f46e5'
+                        pointBackgroundColor: '#2196F3'
                     }]
                 },
                 options: {
@@ -392,7 +471,7 @@
                     datasets: [{
                         label: '在校時數',
                         data: hours,
-                        backgroundColor: '#818cf8',
+                        backgroundColor: '#64B5F6',
                         borderRadius: 4
                     }]
                 },
