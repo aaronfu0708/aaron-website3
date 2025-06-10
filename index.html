@@ -412,7 +412,7 @@
             container.appendChild(fragment);
         }
 
-        // 使用防抖函數優化事件處理
+       
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -428,18 +428,17 @@
         // 優化圖表更新
         function optimizedChartUpdate(chart) {
             if (!chart) return;
-            
-            // 禁用動畫
+        
             chart.options.animation = false;
             chart.options.responsiveAnimationDuration = 0;
             
-            // 使用 requestAnimationFrame 進行更新
+            
             requestAnimationFrame(() => {
-                chart.update('none');  // 使用 'none' 模式更新
+                chart.update('none');  
             });
         }
 
-        // 優化旋轉容器的動畫
+        
         let isAnimating = false;
         let lastFrameTime = 0;
         const FRAME_RATE = 30;  // 限制幀率
@@ -462,7 +461,6 @@
             requestAnimationFrame(updateRotation);
         }
 
-        // 載入資料
         async function loadData() {
             try {
                 const response = await fetch('attendance_log (1).json');
@@ -490,7 +488,6 @@
             }
         }
 
-        // 計算統計數據
         function calculateStats(data) {
             const stats = {
                 totalClassHours: 0,
@@ -543,7 +540,7 @@
             return stats;
         }
 
-        // 更新3D選單顯示
+       
         function updateMenuDisplay(stats) {
             const attendanceRate = ((stats.totalAttendedHours / stats.totalClassHours) * 100).toFixed(1);
             menuItems = [
@@ -560,7 +557,7 @@
             document.getElementById('dateRange').textContent = dateRangeText;
         }
 
-        // 優化圖表創建
+      
         function createAttendancePieChart(stats) {
             const ctx = document.getElementById('attendancePieChart').getContext('2d');
             
@@ -581,7 +578,7 @@
                 options: {
                     responsive: true,
                     animation: {
-                        duration: 0  // 移除動畫
+                        duration: 0  // 
                     },
                     plugins: {
                         legend: {
@@ -616,7 +613,7 @@
                 options: {
                     responsive: true,
                     animation: {
-                        duration: 0  // 移除動畫
+                        duration: 0  // 
                     },
                     scales: {
                         y: {
@@ -672,12 +669,11 @@
 
                 const stats = calculateStats(data);
                 
-                // 使用 requestIdleCallback 延遲非關鍵更新
+             
                 requestIdleCallback(() => {
                     updateMenuDisplay(stats);
                 });
 
-                // 批量創建圖表
                 Promise.all([
                     createAttendancePieChart(stats),
                     createDailyClassHoursLine(data),
@@ -720,9 +716,9 @@
             initDashboard();
         });
 
-        // 添加未來科技感動畫
+    
         document.addEventListener('DOMContentLoaded', () => {
-            // 標題動畫
+          
             anime({
                 targets: '.tech-text',
                 opacity: [0, 1],
@@ -731,7 +727,6 @@
                 easing: 'easeOutExpo'
             });
 
-            // 卡片入場動畫
             anime({
                 targets: '.tech-card',
                 opacity: [0, 1],
@@ -741,7 +736,7 @@
                 easing: 'easeOutExpo'
             });
 
-            // 為卡片添加懸浮效果
+     
             document.querySelectorAll('.tech-card').forEach(card => {
                 card.addEventListener('mouseenter', () => {
                     anime({
